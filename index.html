@@ -1,22 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>パート勤務 収入計算ツール</title>
-
-  <!-- PWA manifest (inline) -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#6366f1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="収入計算" />
-
-  <!-- React & Babel (CDN) -->
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; background: #f0f4ff; }
@@ -30,304 +26,256 @@
   <script type="text/babel">
     const { useState, useMemo, useEffect } = React;
 
-    // lucide icons (inline SVG)
-    const Icon = ({ d, size = 20, color = 'currentColor', style = {} }) => (
+    const Icon = ({ d, size = 20, color = 'currentColor' }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
         stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        style={{ flexShrink: 0, ...style }}>
+        style={{ flexShrink: 0 }}>
         {[].concat(d).map((path, i) => <path key={i} d={path} />)}
       </svg>
     );
-    const CalendarIcon = ({size,color}) => <Icon size={size} color={color} d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />;
-    const DollarIcon  = ({size,color}) => <Icon size={size} color={color} d={["M12 2v20","M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"]} />;
-    const ClockIcon   = ({size,color}) => <Icon size={size} color={color} d={["M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2","M12 6v6l4 2"]} />;
-    const TrendIcon   = ({size,color}) => <Icon size={size} color={color} d="M22 7 13.5 15.5 8.5 10.5 2 17M22 7h-6M22 7v6" />;
-    const SettingsIcon= ({size,color}) => <Icon size={size} color={color} d={["M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6","M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"]} />;
-    const XIcon       = ({size,color}) => <Icon size={size} color={color} d={["M18 6 6 18","M6 6l12 12"]} />;
+    const CalendarIcon  = (p) => <Icon {...p} d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />;
+    const DollarIcon    = (p) => <Icon {...p} d={["M12 2v20","M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"]} />;
+    const ClockIcon     = (p) => <Icon {...p} d={["M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2","M12 6v6l4 2"]} />;
+    const TrendIcon     = (p) => <Icon {...p} d="M22 7 13.5 15.5 8.5 10.5 2 17M22 7h-6M22 7v6" />;
+    const SettingsIcon  = (p) => <Icon {...p} d={["M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6","M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"]} />;
+    const XIcon         = (p) => <Icon {...p} d={["M18 6 6 18","M6 6l12 12"]} />;
 
     const DEFAULT_SETTINGS = {
-      hourlyWage: 1560,
-      workHours: 5,
-      workDays: [1, 2, 4, 5],
-      includeYearEnd: true,
-      yearEndStart: 30,
-      yearStartEnd: 3,
-      includeNationalHolidays: true,
-      customRestDays: [],
+      hourlyWage: 1560, workHours: 5, workDays: [1,2,4,5],
+      includeYearEnd: true, yearEndStart: 30, yearStartEnd: 3,
+      includeNationalHolidays: true, customRestDays: [],
     };
-
     const DAY_LABELS      = ['日','月','火','水','木','金','土'];
     const DAY_LABELS_FULL = ['日曜','月曜','火曜','水曜','木曜','金曜','土曜'];
     const STORAGE_KEY     = 'workCalc_v4';
 
-    const WorkScheduleCalculator = () => {
-      const [year, setYear]               = useState(2026);
-      const [allYearsData, setAllYearsData] = useState({});
-      const [settings, setSettings]       = useState(DEFAULT_SETTINGS);
-      const [showSettings, setShowSettings] = useState(false);
-      const [settingsDraft, setSettingsDraft] = useState(DEFAULT_SETTINGS);
-      const [loaded, setLoaded]           = useState(false);
+    const Toggle = ({ value, onChange }) => (
+      <div onClick={onChange} style={{ width:'44px', height:'24px', borderRadius:'12px', position:'relative', background:value?'#6366f1':'#d1d5db', transition:'background 0.2s', cursor:'pointer', flexShrink:0 }}>
+        <div style={{ position:'absolute', top:'3px', left:value?'22px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'white', transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+      </div>
+    );
 
-      // 初回読み込み
+    const StepInput = ({ value, onChange, borderColor }) => (
+      <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
+        <button onClick={() => onChange(Math.max(0, value - 1))}
+          style={{ width:'24px', height:'24px', background:'#fee2e2', border:'none', borderRadius:'5px', color:'#dc2626', fontWeight:'800', cursor:'pointer', fontSize:'14px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>−</button>
+        <input type="number" value={value || ''}
+          onChange={e => onChange(e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
+          style={{ width:'36px', padding:'3px 2px', textAlign:'center', border:`1.5px solid ${borderColor}`, borderRadius:'5px', fontSize:'12px', minWidth:0 }}
+          placeholder="0" />
+        <button onClick={() => onChange(value + 1)}
+          style={{ width:'24px', height:'24px', background:'#dcfce7', border:'none', borderRadius:'5px', color:'#16a34a', fontWeight:'800', cursor:'pointer', fontSize:'14px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>+</button>
+      </div>
+    );
+
+    const WorkScheduleCalculator = () => {
+      const [year, setYear]                   = useState(2026);
+      const [allYearsData, setAllYearsData]   = useState({});
+      const [settings, setSettings]           = useState(DEFAULT_SETTINGS);
+      const [showSettings, setShowSettings]   = useState(false);
+      const [settingsDraft, setSettingsDraft] = useState(DEFAULT_SETTINGS);
+      const [loaded, setLoaded]               = useState(false);
+
       useEffect(() => {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed.year)         setYear(Number(parsed.year));
-            if (parsed.allYearsData) setAllYearsData(parsed.allYearsData);
-            if (parsed.settings)     setSettings({ ...DEFAULT_SETTINGS, ...parsed.settings });
+            const p = JSON.parse(raw);
+            if (p.year)         setYear(Number(p.year));
+            if (p.allYearsData) setAllYearsData(p.allYearsData);
+            if (p.settings)     setSettings({ ...DEFAULT_SETTINGS, ...p.settings });
           }
-        } catch (e) {}
+        } catch(e) {}
         setLoaded(true);
       }, []);
 
-      // 保存
       useEffect(() => {
         if (!loaded) return;
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ year, allYearsData, settings }));
-        } catch (e) {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ year, allYearsData, settings })); } catch(e) {}
       }, [year, allYearsData, settings, loaded]);
 
       const getJapaneseHolidays = (y) => {
-        const holidays = [];
-        const fixed = [
-          {month:0,day:1},{month:1,day:11},{month:1,day:23},
-          {month:3,day:29},{month:4,day:3},{month:4,day:4},
-          {month:4,day:5},{month:7,day:11},{month:10,day:3},{month:10,day:23}
-        ];
-        fixed.forEach(h => holidays.push(new Date(y, h.month, h.day)));
-
-        const getMonday = (month, week) => {
-          const d = new Date(y, month, 1);
-          while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
-          d.setDate(d.getDate() + (week - 1) * 7);
-          return new Date(d);
-        };
-        holidays.push(getMonday(0,2), getMonday(6,3), getMonday(8,3), getMonday(9,2));
-
-        const ve = Math.floor(20.8431 + 0.242194*(y-1980) - Math.floor((y-1980)/4));
-        const ae = Math.floor(23.2488 + 0.242194*(y-1980) - Math.floor((y-1980)/4));
-        holidays.push(new Date(y,2,ve), new Date(y,8,ae));
-
-        const subs = [];
-        holidays.forEach(h => {
-          if (h.getDay() === 0) {
-            let s = new Date(h);
-            s.setDate(s.getDate() + 1);
-            while (holidays.some(x => x.toDateString() === s.toDateString())) s.setDate(s.getDate()+1);
-            subs.push(new Date(s));
-          }
-        });
-
-        const nationals = [];
-        const sorted = [...holidays,...subs].sort((a,b)=>a-b);
-        for (let i=0; i<sorted.length-1; i++) {
-          const diff = Math.floor((sorted[i+1]-sorted[i])/(86400000));
-          if (diff === 2) {
-            const mid = new Date(sorted[i]);
-            mid.setDate(mid.getDate()+1);
-            if (mid.getDay()!==0 && mid.getDay()!==6) nationals.push(new Date(mid));
-          }
+        const h = [];
+        [{m:0,d:1},{m:1,d:11},{m:1,d:23},{m:3,d:29},{m:4,d:3},{m:4,d:4},{m:4,d:5},{m:7,d:11},{m:10,d:3},{m:10,d:23}]
+          .forEach(x => h.push(new Date(y,x.m,x.d)));
+        const mon = (mo,wk) => { const d=new Date(y,mo,1); while(d.getDay()!==1)d.setDate(d.getDate()+1); d.setDate(d.getDate()+(wk-1)*7); return new Date(d); };
+        h.push(mon(0,2),mon(6,3),mon(8,3),mon(9,2));
+        h.push(new Date(y,2,Math.floor(20.8431+0.242194*(y-1980)-Math.floor((y-1980)/4))));
+        h.push(new Date(y,8,Math.floor(23.2488+0.242194*(y-1980)-Math.floor((y-1980)/4))));
+        const subs=[];
+        h.forEach(hd => { if(hd.getDay()===0){ let s=new Date(hd); s.setDate(s.getDate()+1); while(h.some(x=>x.toDateString()===s.toDateString()))s.setDate(s.getDate()+1); subs.push(new Date(s)); }});
+        const nationals=[];
+        const sorted=[...h,...subs].sort((a,b)=>a-b);
+        for(let i=0;i<sorted.length-1;i++){
+          const diff=Math.floor((sorted[i+1]-sorted[i])/86400000);
+          if(diff===2){ const m=new Date(sorted[i]); m.setDate(m.getDate()+1); if(m.getDay()!==0&&m.getDay()!==6) nationals.push(new Date(m)); }
         }
-        return [...holidays,...subs,...nationals];
+        return [...h,...subs,...nationals];
       };
 
-      const getYearEndHolidays = (y, cfg = settings) => {
-        const days = [];
-        for (let d = cfg.yearEndStart; d <= 31; d++) days.push(new Date(y, 11, d));
-        for (let d = 2; d <= cfg.yearStartEnd; d++) days.push(new Date(y, 0, d));
+      const getYearEndHolidays = (y, cfg=settings) => {
+        const days=[];
+        for(let d=cfg.yearEndStart;d<=31;d++) days.push(new Date(y,11,d));
+        for(let d=2;d<=cfg.yearStartEnd;d++) days.push(new Date(y,0,d));
         return days;
       };
 
-      const isHoliday = (date, holidays, yearEndHolidays, cfg) => {
-        if (!cfg.workDays.includes(date.getDay())) return true;
-        const ds = date.toDateString();
-        if (cfg.includeNationalHolidays && holidays.some(h => h.toDateString()===ds)) return true;
-        if (cfg.includeYearEnd && yearEndHolidays.some(h => h.toDateString()===ds)) return true;
-        if (cfg.customRestDays.some(r => new Date(date.getFullYear(),r.month-1,r.day).toDateString()===ds)) return true;
+      const isHoliday = (date, holidays, yeh, cfg) => {
+        if(!cfg.workDays.includes(date.getDay())) return true;
+        const ds=date.toDateString();
+        if(cfg.includeNationalHolidays && holidays.some(h=>h.toDateString()===ds)) return true;
+        if(cfg.includeYearEnd && yeh.some(h=>h.toDateString()===ds)) return true;
+        if(cfg.customRestDays.some(r=>new Date(date.getFullYear(),r.month-1,r.day).toDateString()===ds)) return true;
         return false;
       };
 
       const monthlyData = allYearsData[year] || {};
 
       const calculateSchedule = useMemo(() => {
-        const holidays        = getJapaneseHolidays(year);
-        const yearEndHolidays = getYearEndHolidays(year, settings);
-        const { hourlyWage, workHours } = settings;
-        const monthly = [];
-        let totalWorkDays=0, totalDays=0, totalHolidayCount=0;
-
-        for (let month=0; month<12; month++) {
-          const lastDay = new Date(year, month+1, 0);
-          let workDays=0, holidayCount=0;
-          totalDays += lastDay.getDate();
-          for (let day=1; day<=lastDay.getDate(); day++) {
-            const date = new Date(year, month, day);
-            const dow  = date.getDay();
-            const ds   = date.toDateString();
-            const isNH = holidays.some(h=>h.toDateString()===ds) || yearEndHolidays.some(h=>h.toDateString()===ds);
-            if (isNH && ![0,6].includes(dow) && settings.workDays.includes(dow)) holidayCount++;
-            if (!isHoliday(date, holidays, yearEndHolidays, settings)) workDays++;
+        const holidays=getJapaneseHolidays(year);
+        const yeh=getYearEndHolidays(year,settings);
+        const {hourlyWage,workHours}=settings;
+        const monthly=[]; let totalWD=0,totalDays=0,totalHC=0;
+        for(let mo=0;mo<12;mo++){
+          const last=new Date(year,mo+1,0);
+          let wd=0,hc=0; totalDays+=last.getDate();
+          for(let d=1;d<=last.getDate();d++){
+            const date=new Date(year,mo,d); const dow=date.getDay(); const ds=date.toDateString();
+            const isNH=holidays.some(h=>h.toDateString()===ds)||yeh.some(h=>h.toDateString()===ds);
+            if(isNH&&![0,6].includes(dow)&&settings.workDays.includes(dow)) hc++;
+            if(!isHoliday(date,holidays,yeh,settings)) wd++;
           }
-          totalWorkDays      += workDays;
-          totalHolidayCount  += holidayCount;
-
-          const mk          = month+1;
-          const saved       = monthlyData[mk] || {};
-          const adjustment  = Number(saved.adjustment) || 0;
-          const finalAmount = saved.finalAmount!=null ? Number(saved.finalAmount) : null;
-          const sideIncome  = Number(saved.sideIncome) || 0;
-          const baseIncome  = workDays * workHours * hourlyWage;
-          const calculated  = baseIncome + adjustment * hourlyWage;
-          const partIncome  = finalAmount !== null ? finalAmount : calculated;
-          monthly.push({ month: mk, workDays, adjustment, baseIncome, calculated, finalAmount, partIncome, sideIncome, total: partIncome+sideIncome });
+          totalWD+=wd; totalHC+=hc;
+          const mk=mo+1; const sv=monthlyData[mk]||{};
+          const overtimeMinutes = Number(sv.overtimeMinutes)||0;
+          const holidayDays     = Number(sv.holidayDays)||0;
+          const finalAmount     = sv.finalAmount!=null ? Number(sv.finalAmount) : null;
+          const sideIncome      = Number(sv.sideIncome)||0;
+          const baseIncome      = wd*workHours*hourlyWage;
+          const overtimeIncome  = Math.round(hourlyWage*1.25/6*overtimeMinutes);
+          const holidayIncome   = Math.round(hourlyWage*1.35*workHours*holidayDays);
+          const calculated      = baseIncome+overtimeIncome+holidayIncome;
+          const partIncome      = finalAmount!==null ? finalAmount : calculated;
+          monthly.push({month:mk,workDays:wd,overtimeMinutes,holidayDays,baseIncome,overtimeIncome,holidayIncome,calculated,finalAmount,partIncome,sideIncome,total:partIncome+sideIncome});
         }
-
-        const totalPartIncome = monthly.reduce((s,m)=>s+m.partIncome, 0);
-        const totalSideIncome = monthly.reduce((s,m)=>s+m.sideIncome, 0);
-        const totalIncome     = totalPartIncome + totalSideIncome;
-        return { monthly, yearly: { workDays: totalWorkDays, totalDays, totalHolidays: totalDays-totalWorkDays, nationalHolidays: totalHolidayCount, partIncome: totalPartIncome, sideIncome: totalSideIncome, totalIncome, average: Math.round(totalIncome/12) } };
+        const tPart=monthly.reduce((s,m)=>s+m.partIncome,0);
+        const tSide=monthly.reduce((s,m)=>s+m.sideIncome,0);
+        const tTotal=tPart+tSide;
+        return {monthly, yearly:{workDays:totalWD,totalDays,totalHolidays:totalDays-totalWD,nationalHolidays:totalHC,partIncome:tPart,sideIncome:tSide,totalIncome:tTotal,average:Math.round(tTotal/12)}};
       }, [year, monthlyData, settings]);
 
       const calcFuture = (ty) => {
-        const h=getJapaneseHolidays(ty), ye=getYearEndHolidays(ty,settings);
+        const h=getJapaneseHolidays(ty),ye=getYearEndHolidays(ty,settings);
         let total=0;
-        for (let m=0;m<12;m++) {
-          const last=new Date(ty,m+1,0);
-          let wd=0;
-          for (let d=1;d<=last.getDate();d++) { if (!isHoliday(new Date(ty,m,d),h,ye,settings)) wd++; }
-          total+=wd;
-        }
-        return total * settings.workHours * settings.hourlyWage;
+        for(let m=0;m<12;m++){ const last=new Date(ty,m+1,0); let wd=0; for(let d=1;d<=last.getDate();d++){ if(!isHoliday(new Date(ty,m,d),h,ye,settings)) wd++; } total+=wd; }
+        return total*settings.workHours*settings.hourlyWage;
       };
 
-      const futureYears = [1,2,3,4,5].map(o=>({ y: year+o, income: calcFuture(year+o) }));
+      const futureYears = [1,2,3,4,5].map(o=>({y:year+o,income:calcFuture(year+o)}));
       const fmt = n => n.toLocaleString('ja-JP');
-
-      const updateMonth = (month, field, value) => {
-        setAllYearsData(prev => ({ ...prev, [year]: { ...prev[year], [month]: { ...prev[year]?.[month], [field]: value } } }));
-      };
-
-      const toggleDraftDay = (d) => {
-        setSettingsDraft(p => ({ ...p, workDays: p.workDays.includes(d) ? p.workDays.filter(x=>x!==d) : [...p.workDays,d].sort() }));
-      };
-
+      const updateMonth = (month,field,value) => setAllYearsData(prev=>({...prev,[year]:{...prev[year],[month]:{...prev[year]?.[month],[field]:value}}}));
       const openSettings  = () => { setSettingsDraft({...settings}); setShowSettings(true); };
-      const applySettings = () => { if (settingsDraft.workDays.length===0) return; setSettings(settingsDraft); setShowSettings(false); };
+      const applySettings = () => { if(settingsDraft.workDays.length===0) return; setSettings(settingsDraft); setShowSettings(false); };
       const workDayLabel  = settings.workDays.map(d=>DAY_LABELS[d]).join('・')+'曜日';
 
-      const Toggle = ({ value, onChange }) => (
-        <div onClick={onChange} style={{ width:'44px', height:'24px', borderRadius:'12px', position:'relative', background: value?'#6366f1':'#d1d5db', transition:'background 0.2s', cursor:'pointer', flexShrink:0 }}>
-          <div style={{ position:'absolute', top:'3px', left: value?'22px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'white', transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
-        </div>
-      );
-
       return (
-        <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#f0f4ff 0%,#e8ecff 50%,#f5f0ff 100%)', padding:'12px', fontFamily:"'Hiragino Sans','Yu Gothic',sans-serif" }}>
-          <div style={{ maxWidth:'900px', margin:'0 auto' }}>
+        <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#f0f4ff 0%,#e8ecff 50%,#f5f0ff 100%)',padding:'12px',fontFamily:"'Hiragino Sans','Yu Gothic',sans-serif"}}>
+          <div style={{maxWidth:'900px',margin:'0 auto'}}>
 
             {/* Header */}
-            <div style={{ background:'white', borderRadius:'16px', boxShadow:'0 4px 24px rgba(99,102,241,0.10)', padding:'16px', marginBottom:'12px' }}>
-              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:'12px' }}>
+            <div style={{background:'white',borderRadius:'16px',boxShadow:'0 4px 24px rgba(99,102,241,0.10)',padding:'16px',marginBottom:'12px'}}>
+              <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:'12px'}}>
                 <div>
-                  <h1 style={{ fontSize:'20px', fontWeight:'800', color:'#1e1b4b', margin:0, display:'flex', alignItems:'center', gap:'10px' }}>
-                    <CalendarIcon size={24} color="#6366f1" />
-                    パート勤務 収入計算ツール
+                  <h1 style={{fontSize:'20px',fontWeight:'800',color:'#1e1b4b',margin:0,display:'flex',alignItems:'center',gap:'10px'}}>
+                    <CalendarIcon size={24} color="#6366f1"/>パート勤務 収入計算ツール
                   </h1>
-                  <p style={{ color:'#6b7280', marginTop:'6px', fontSize:'12px', lineHeight:'1.6' }}>
+                  <p style={{color:'#6b7280',marginTop:'6px',fontSize:'12px',lineHeight:'1.6'}}>
                     勤務日: {workDayLabel}　／　{settings.workHours}時間／日　／　時給¥{fmt(settings.hourlyWage)}
                     {settings.includeYearEnd && <span>　／　年末年始: 12/{settings.yearEndStart}〜1/{settings.yearStartEnd}</span>}
                   </p>
                 </div>
-                <button onClick={openSettings} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'10px 16px', background:'#f0f0ff', border:'1.5px solid #c7d2fe', borderRadius:'10px', color:'#4f46e5', fontWeight:'600', fontSize:'13px', cursor:'pointer', whiteSpace:'nowrap' }}>
-                  <SettingsIcon size={16} color="#4f46e5" /> 設定変更
+                <button onClick={openSettings} style={{display:'flex',alignItems:'center',gap:'6px',padding:'10px 16px',background:'#f0f0ff',border:'1.5px solid #c7d2fe',borderRadius:'10px',color:'#4f46e5',fontWeight:'600',fontSize:'13px',cursor:'pointer',whiteSpace:'nowrap'}}>
+                  <SettingsIcon size={16} color="#4f46e5"/> 設定変更
                 </button>
               </div>
-              <div style={{ marginTop:'16px', display:'flex', alignItems:'center', gap:'12px' }}>
-                <label style={{ fontSize:'13px', color:'#6b7280', fontWeight:'600' }}>計算対象年</label>
+              <div style={{marginTop:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+                <label style={{fontSize:'13px',color:'#6b7280',fontWeight:'600'}}>計算対象年</label>
                 <input type="number" value={year} onChange={e=>setYear(parseInt(e.target.value))}
-                  style={{ padding:'8px 12px', border:'1.5px solid #c7d2fe', borderRadius:'8px', fontSize:'15px', fontWeight:'700', color:'#1e1b4b', width:'96px', outline:'none' }}
-                  min="2020" max="2050" />
+                  style={{padding:'8px 12px',border:'1.5px solid #c7d2fe',borderRadius:'8px',fontSize:'15px',fontWeight:'700',color:'#1e1b4b',width:'96px',outline:'none'}} min="2020" max="2050"/>
               </div>
             </div>
 
             {/* Settings Modal */}
             {showSettings && (
-              <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:'16px' }}>
-                <div style={{ background:'white', borderRadius:'20px', padding:'24px', maxWidth:'460px', width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,0.2)', maxHeight:'90vh', overflowY:'auto' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
-                    <h2 style={{ margin:0, fontSize:'18px', fontWeight:'800', color:'#1e1b4b', display:'flex', alignItems:'center', gap:'8px' }}>
-                      <SettingsIcon size={18} color="#6366f1" /> 勤務条件の設定
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}}>
+                <div style={{background:'white',borderRadius:'20px',padding:'24px',maxWidth:'460px',width:'100%',boxShadow:'0 20px 60px rgba(0,0,0,0.2)',maxHeight:'90vh',overflowY:'auto'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px'}}>
+                    <h2 style={{margin:0,fontSize:'18px',fontWeight:'800',color:'#1e1b4b',display:'flex',alignItems:'center',gap:'8px'}}>
+                      <SettingsIcon size={18} color="#6366f1"/> 勤務条件の設定
                     </h2>
-                    <button onClick={()=>setShowSettings(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#9ca3af' }}><XIcon size={22} /></button>
+                    <button onClick={()=>setShowSettings(false)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af'}}><XIcon size={22}/></button>
                   </div>
-
-                  <div style={{ marginBottom:'20px' }}>
-                    <label style={{ display:'block', fontSize:'13px', fontWeight:'700', color:'#374151', marginBottom:'8px' }}>時給（円）</label>
+                  <div style={{marginBottom:'20px'}}>
+                    <label style={{display:'block',fontSize:'13px',fontWeight:'700',color:'#374151',marginBottom:'8px'}}>時給（円）</label>
                     <input type="number" value={settingsDraft.hourlyWage} onChange={e=>setSettingsDraft(p=>({...p,hourlyWage:Number(e.target.value)}))}
-                      style={{ padding:'10px 12px', border:'1.5px solid #d1d5db', borderRadius:'8px', fontSize:'16px', width:'140px', fontWeight:'700' }} min="0" />
+                      style={{padding:'10px 12px',border:'1.5px solid #d1d5db',borderRadius:'8px',fontSize:'16px',width:'140px',fontWeight:'700'}} min="0"/>
                   </div>
-
-                  <div style={{ marginBottom:'20px' }}>
-                    <label style={{ display:'block', fontSize:'13px', fontWeight:'700', color:'#374151', marginBottom:'8px' }}>1日の勤務時間（時間）</label>
+                  <div style={{marginBottom:'20px'}}>
+                    <label style={{display:'block',fontSize:'13px',fontWeight:'700',color:'#374151',marginBottom:'8px'}}>1日の勤務時間（時間）</label>
                     <input type="number" value={settingsDraft.workHours} onChange={e=>setSettingsDraft(p=>({...p,workHours:Number(e.target.value)}))}
-                      style={{ padding:'10px 12px', border:'1.5px solid #d1d5db', borderRadius:'8px', fontSize:'16px', width:'100px', fontWeight:'700' }} min="0.5" max="24" step="0.5" />
+                      style={{padding:'10px 12px',border:'1.5px solid #d1d5db',borderRadius:'8px',fontSize:'16px',width:'100px',fontWeight:'700'}} min="0.5" max="24" step="0.5"/>
                   </div>
-
-                  <div style={{ marginBottom:'20px' }}>
-                    <label style={{ display:'block', fontSize:'13px', fontWeight:'700', color:'#374151', marginBottom:'8px' }}>勤務曜日（複数選択可）</label>
-                    <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+                  <div style={{marginBottom:'20px'}}>
+                    <label style={{display:'block',fontSize:'13px',fontWeight:'700',color:'#374151',marginBottom:'8px'}}>勤務曜日（複数選択可）</label>
+                    <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
                       {[0,1,2,3,4,5,6].map(d=>(
-                        <button key={d} onClick={()=>toggleDraftDay(d)} style={{ width:'42px', height:'42px', borderRadius:'50%', border:'2px solid', borderColor:settingsDraft.workDays.includes(d)?'#6366f1':'#e5e7eb', background:settingsDraft.workDays.includes(d)?'#6366f1':'white', color:settingsDraft.workDays.includes(d)?'white':'#6b7280', fontWeight:'700', fontSize:'14px', cursor:'pointer' }}>
+                        <button key={d} onClick={()=>setSettingsDraft(p=>({...p,workDays:p.workDays.includes(d)?p.workDays.filter(x=>x!==d):[...p.workDays,d].sort()}))}
+                          style={{width:'42px',height:'42px',borderRadius:'50%',border:'2px solid',borderColor:settingsDraft.workDays.includes(d)?'#6366f1':'#e5e7eb',background:settingsDraft.workDays.includes(d)?'#6366f1':'white',color:settingsDraft.workDays.includes(d)?'white':'#6b7280',fontWeight:'700',fontSize:'14px',cursor:'pointer'}}>
                           {DAY_LABELS[d]}
                         </button>
                       ))}
                     </div>
-                    {settingsDraft.workDays.length===0 && <p style={{ color:'#ef4444', fontSize:'12px', marginTop:'6px' }}>※ 勤務日を1日以上選択してください</p>}
-                    <p style={{ color:'#9ca3af', fontSize:'12px', marginTop:'6px' }}>選択中: {settingsDraft.workDays.length>0 ? settingsDraft.workDays.map(d=>DAY_LABELS_FULL[d]).join('・') : 'なし'}</p>
+                    {settingsDraft.workDays.length===0 && <p style={{color:'#ef4444',fontSize:'12px',marginTop:'6px'}}>※ 勤務日を1日以上選択してください</p>}
+                    <p style={{color:'#9ca3af',fontSize:'12px',marginTop:'6px'}}>選択中: {settingsDraft.workDays.length>0?settingsDraft.workDays.map(d=>DAY_LABELS_FULL[d]).join('・'):'なし'}</p>
                   </div>
-
-                  <div style={{ marginBottom:'20px' }}>
-                    <label style={{ display:'block', fontSize:'13px', fontWeight:'700', color:'#374151', marginBottom:'10px' }}>休日扱いの設定</label>
-                    <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                      <label style={{ display:'flex', alignItems:'center', gap:'10px', cursor:'pointer' }}>
-                        <Toggle value={settingsDraft.includeNationalHolidays} onChange={()=>setSettingsDraft(p=>({...p,includeNationalHolidays:!p.includeNationalHolidays}))} />
-                        <span style={{ fontSize:'13px', color:'#374151' }}>祝日・振替休日・国民の休日を休みにする</span>
+                  <div style={{marginBottom:'20px'}}>
+                    <label style={{display:'block',fontSize:'13px',fontWeight:'700',color:'#374151',marginBottom:'10px'}}>休日扱いの設定</label>
+                    <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                      <label style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer'}}>
+                        <Toggle value={settingsDraft.includeNationalHolidays} onChange={()=>setSettingsDraft(p=>({...p,includeNationalHolidays:!p.includeNationalHolidays}))}/>
+                        <span style={{fontSize:'13px',color:'#374151'}}>祝日・振替休日・国民の休日を休みにする</span>
                       </label>
-                      <label style={{ display:'flex', alignItems:'center', gap:'10px', cursor:'pointer' }}>
-                        <Toggle value={settingsDraft.includeYearEnd} onChange={()=>setSettingsDraft(p=>({...p,includeYearEnd:!p.includeYearEnd}))} />
-                        <span style={{ fontSize:'13px', color:'#374151' }}>年末年始を休みにする</span>
+                      <label style={{display:'flex',alignItems:'center',gap:'10px',cursor:'pointer'}}>
+                        <Toggle value={settingsDraft.includeYearEnd} onChange={()=>setSettingsDraft(p=>({...p,includeYearEnd:!p.includeYearEnd}))}/>
+                        <span style={{fontSize:'13px',color:'#374151'}}>年末年始を休みにする</span>
                       </label>
                       {settingsDraft.includeYearEnd && (
-                        <div style={{ marginLeft:'54px', background:'#f8f9ff', border:'1px solid #e0e7ff', borderRadius:'10px', padding:'12px', display:'flex', flexDirection:'column', gap:'10px' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:'8px', flexWrap:'wrap' }}>
-                            <span style={{ fontSize:'12px', color:'#6b7280', fontWeight:'600', whiteSpace:'nowrap' }}>年末：12月</span>
+                        <div style={{marginLeft:'54px',background:'#f8f9ff',border:'1px solid #e0e7ff',borderRadius:'10px',padding:'12px',display:'flex',flexDirection:'column',gap:'10px'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+                            <span style={{fontSize:'12px',color:'#6b7280',fontWeight:'600',whiteSpace:'nowrap'}}>年末：12月</span>
                             <select value={settingsDraft.yearEndStart} onChange={e=>setSettingsDraft(p=>({...p,yearEndStart:Number(e.target.value)}))}
-                              style={{ padding:'5px 8px', border:'1.5px solid #c7d2fe', borderRadius:'6px', fontSize:'13px', fontWeight:'700', color:'#1e1b4b', background:'white' }}>
+                              style={{padding:'5px 8px',border:'1.5px solid #c7d2fe',borderRadius:'6px',fontSize:'13px',fontWeight:'700',color:'#1e1b4b',background:'white'}}>
                               {Array.from({length:12},(_,i)=>20+i).map(d=><option key={d} value={d}>{d}日</option>)}
                             </select>
-                            <span style={{ fontSize:'12px', color:'#6b7280' }}>〜 12月31日</span>
+                            <span style={{fontSize:'12px',color:'#6b7280'}}>〜 12月31日</span>
                           </div>
-                          <div style={{ display:'flex', alignItems:'center', gap:'8px', flexWrap:'wrap' }}>
-                            <span style={{ fontSize:'12px', color:'#6b7280', fontWeight:'600', whiteSpace:'nowrap' }}>年始：1月1日 〜 1月</span>
+                          <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+                            <span style={{fontSize:'12px',color:'#6b7280',fontWeight:'600',whiteSpace:'nowrap'}}>年始：1月1日 〜 1月</span>
                             <select value={settingsDraft.yearStartEnd} onChange={e=>setSettingsDraft(p=>({...p,yearStartEnd:Number(e.target.value)}))}
-                              style={{ padding:'5px 8px', border:'1.5px solid #c7d2fe', borderRadius:'6px', fontSize:'13px', fontWeight:'700', color:'#1e1b4b', background:'white' }}>
+                              style={{padding:'5px 8px',border:'1.5px solid #c7d2fe',borderRadius:'6px',fontSize:'13px',fontWeight:'700',color:'#1e1b4b',background:'white'}}>
                               {[1,2,3,4,5,6,7].map(d=><option key={d} value={d}>{d}日</option>)}
                             </select>
-                            <span style={{ fontSize:'11px', color:'#9ca3af' }}>※1/1は元日として祝日扱い</span>
+                            <span style={{fontSize:'11px',color:'#9ca3af'}}>※1/1は元日として祝日扱い</span>
                           </div>
-                          <p style={{ margin:0, fontSize:'11px', color:'#6366f1', fontWeight:'600' }}>休業期間: 12/{settingsDraft.yearEndStart}〜1/{settingsDraft.yearStartEnd}</p>
+                          <p style={{margin:0,fontSize:'11px',color:'#6366f1',fontWeight:'600'}}>休業期間: 12/{settingsDraft.yearEndStart}〜1/{settingsDraft.yearStartEnd}</p>
                         </div>
                       )}
                     </div>
                   </div>
-
-                  <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end', paddingTop:'16px', borderTop:'1px solid #f3f4f6' }}>
-                    <button onClick={()=>setShowSettings(false)} style={{ padding:'10px 20px', border:'1.5px solid #e5e7eb', borderRadius:'8px', background:'white', color:'#6b7280', fontWeight:'600', cursor:'pointer' }}>キャンセル</button>
+                  <div style={{display:'flex',gap:'10px',justifyContent:'flex-end',paddingTop:'16px',borderTop:'1px solid #f3f4f6'}}>
+                    <button onClick={()=>setShowSettings(false)} style={{padding:'10px 20px',border:'1.5px solid #e5e7eb',borderRadius:'8px',background:'white',color:'#6b7280',fontWeight:'600',cursor:'pointer'}}>キャンセル</button>
                     <button onClick={applySettings} disabled={settingsDraft.workDays.length===0}
-                      style={{ padding:'10px 24px', border:'none', borderRadius:'8px', background:settingsDraft.workDays.length===0?'#e5e7eb':'#6366f1', color:settingsDraft.workDays.length===0?'#9ca3af':'white', fontWeight:'700', cursor:settingsDraft.workDays.length===0?'not-allowed':'pointer', fontSize:'14px' }}>
+                      style={{padding:'10px 24px',border:'none',borderRadius:'8px',background:settingsDraft.workDays.length===0?'#e5e7eb':'#6366f1',color:settingsDraft.workDays.length===0?'#9ca3af':'white',fontWeight:'700',cursor:settingsDraft.workDays.length===0?'not-allowed':'pointer',fontSize:'14px'}}>
                       適用する
                     </button>
                   </div>
@@ -336,86 +284,96 @@
             )}
 
             {/* Annual Summary */}
-            <div style={{ background:'linear-gradient(135deg,#eef2ff,#e0e7ff)', borderRadius:'16px', padding:'16px', marginBottom:'12px', border:'1px solid #c7d2fe' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px' }}>
-                <ClockIcon size={22} color="#6366f1" />
-                <h3 style={{ margin:0, fontSize:'16px', fontWeight:'800', color:'#1e1b4b' }}>{year}年 年間サマリー</h3>
+            <div style={{background:'linear-gradient(135deg,#eef2ff,#e0e7ff)',borderRadius:'16px',padding:'16px',marginBottom:'12px',border:'1px solid #c7d2fe'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}}>
+                <ClockIcon size={22} color="#6366f1"/>
+                <h3 style={{margin:0,fontSize:'16px',fontWeight:'800',color:'#1e1b4b'}}>{year}年 年間サマリー</h3>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'8px', marginBottom:'10px' }}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px',marginBottom:'10px'}}>
                 {[{label:'年間勤務日数',value:`${calculateSchedule.yearly.workDays}日`},{label:'年間休日数',value:`${calculateSchedule.yearly.totalHolidays}日`},{label:'祝日数',value:`${calculateSchedule.yearly.nationalHolidays}日`}].map(({label,value})=>(
-                  <div key={label} style={{ background:'white', borderRadius:'10px', padding:'10px 6px', textAlign:'center' }}>
-                    <p style={{ margin:'0 0 3px', fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>{label}</p>
-                    <p style={{ margin:0, fontSize:'18px', fontWeight:'800', color:'#1e1b4b' }}>{value}</p>
+                  <div key={label} style={{background:'white',borderRadius:'10px',padding:'10px 6px',textAlign:'center'}}>
+                    <p style={{margin:'0 0 3px',fontSize:'10px',color:'#9ca3af',fontWeight:'600'}}>{label}</p>
+                    <p style={{margin:0,fontSize:'18px',fontWeight:'800',color:'#1e1b4b'}}>{value}</p>
                   </div>
                 ))}
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'8px' }}>
+              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
                 {[
-                  {label:'パート収入合計', val:calculateSchedule.yearly.partIncome, color:'#6366f1', border:'#c7d2fe'},
-                  {label:'その他収入合計', val:calculateSchedule.yearly.sideIncome, color:'#16a34a', border:'#bbf7d0'},
-                  {label:'年間総収入',     val:calculateSchedule.yearly.totalIncome, color:'#9333ea', border:'#e9d5ff'},
-                  {label:'平均月収',       val:calculateSchedule.yearly.average,    color:'#374151', border:'transparent'},
-                ].map(({label,val,color,border})=>(
-                  <div key={label} style={{ background:'white', borderRadius:'10px', padding:'12px', border:`2px solid ${border}` }}>
-                    <p style={{ margin:'0 0 4px', fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>{label}</p>
-                    <p style={{ margin:0, fontSize:'17px', fontWeight:'800', color }}>¥{fmt(val)}</p>
+                  {label:'パート収入合計',val:calculateSchedule.yearly.partIncome, color:'#6366f1',border:'#c7d2fe'},
+                  {label:'その他収入合計',val:calculateSchedule.yearly.sideIncome, color:'#16a34a',border:'#bbf7d0'},
+                  {label:'年間総収入',    val:calculateSchedule.yearly.totalIncome,color:'#9333ea',border:'#e9d5ff',size:'20px'},
+                  {label:'平均月収',      val:calculateSchedule.yearly.average,    color:'#374151',border:'#e5e7eb'},
+                ].map(({label,val,color,border,size})=>(
+                  <div key={label} style={{background:'white',borderRadius:'10px',padding:'11px 14px',border:`2px solid ${border}`,display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px'}}>
+                    <p style={{margin:0,fontSize:'12px',color:'#9ca3af',fontWeight:'600',whiteSpace:'nowrap'}}>{label}</p>
+                    <p style={{margin:0,fontSize:size||'17px',fontWeight:'800',color,whiteSpace:'nowrap'}}>¥{fmt(val)}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Monthly Cards */}
-            <div style={{ background:'white', borderRadius:'16px', boxShadow:'0 4px 24px rgba(99,102,241,0.10)', padding:'16px', marginBottom:'12px' }}>
-              <h2 style={{ fontSize:'16px', fontWeight:'800', color:'#1e1b4b', marginBottom:'14px', display:'flex', alignItems:'center', gap:'8px' }}>
-                <DollarIcon size={20} color="#6366f1" /> 月別詳細
+            <div style={{background:'white',borderRadius:'16px',boxShadow:'0 4px 24px rgba(99,102,241,0.10)',padding:'16px',marginBottom:'12px'}}>
+              <h2 style={{fontSize:'16px',fontWeight:'800',color:'#1e1b4b',marginBottom:'14px',display:'flex',alignItems:'center',gap:'8px'}}>
+                <DollarIcon size={20} color="#6366f1"/> 月別詳細
               </h2>
-              <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                {calculateSchedule.monthly.map((data, idx)=>(
-                  <div key={data.month} style={{ border:'1.5px solid #e5e7eb', borderRadius:'12px', overflow:'hidden', background: idx%2===0?'white':'#fafafa' }}>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background: idx%2===0?'#f8f9ff':'#f3f4f6', borderBottom:'1px solid #e5e7eb' }}>
-                      <span style={{ fontWeight:'800', fontSize:'16px', color:'#1e1b4b' }}>{data.month}月</span>
-                      <span style={{ fontSize:'12px', color:'#6b7280' }}>勤務 {data.workDays}日</span>
-                      <span style={{ fontWeight:'800', fontSize:'16px', color:'#7c3aed' }}>¥{fmt(data.total)}</span>
+              <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+                {calculateSchedule.monthly.map((data,idx)=>(
+                  <div key={data.month} style={{border:'1.5px solid #e5e7eb',borderRadius:'12px',overflow:'hidden',background:idx%2===0?'white':'#fafafa'}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',background:idx%2===0?'#f8f9ff':'#f3f4f6',borderBottom:'1px solid #e5e7eb'}}>
+                      <span style={{fontWeight:'800',fontSize:'16px',color:'#1e1b4b'}}>{data.month}月</span>
+                      <span style={{fontSize:'12px',color:'#6b7280'}}>勤務 {data.workDays}日</span>
+                      <span style={{fontWeight:'800',fontSize:'16px',color:'#7c3aed'}}>¥{fmt(data.total)}</span>
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr' }}>
-                      <div style={{ padding:'10px 8px', borderRight:'1px solid #f0f0f0', display:'flex', flexDirection:'column', gap:'6px', alignItems:'center' }}>
-                        <span style={{ fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>時間調整</span>
-                        <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
-                          <button onClick={()=>updateMonth(data.month,'adjustment',(data.adjustment||0)-1)} style={{ width:'24px', height:'24px', background:'#fee2e2', border:'none', borderRadius:'5px', color:'#dc2626', fontWeight:'800', cursor:'pointer', fontSize:'14px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>−</button>
-                          <input type="number" value={data.adjustment||''} onChange={e=>updateMonth(data.month,'adjustment',e.target.value===''?0:Number(e.target.value))}
-                            style={{ width:'36px', padding:'3px 2px', textAlign:'center', border:'1.5px solid #e5e7eb', borderRadius:'5px', fontSize:'12px', minWidth:0 }} placeholder="0" />
-                          <button onClick={()=>updateMonth(data.month,'adjustment',(data.adjustment||0)+1)} style={{ width:'24px', height:'24px', background:'#dcfce7', border:'none', borderRadius:'5px', color:'#16a34a', fontWeight:'800', cursor:'pointer', fontSize:'14px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>+</button>
-                        </div>
-                        <span style={{ fontSize:'10px', color:'#9ca3af' }}>時間</span>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr'}}>
+                      <div style={{padding:'10px 8px',borderRight:'1px solid #f0f0f0',display:'flex',flexDirection:'column',gap:'4px',alignItems:'center',background:'#fef9f0'}}>
+                        <span style={{fontSize:'10px',color:'#9ca3af',fontWeight:'600'}}>時間外（10分単位）</span>
+                        <StepInput value={data.overtimeMinutes||0} onChange={v=>updateMonth(data.month,'overtimeMinutes',v)} borderColor="#fed7aa"/>
+                        <span style={{fontSize:'10px',color:'#ea580c',fontWeight:'600'}}>{(data.overtimeMinutes||0)*10}分 → ¥{fmt(data.overtimeIncome)}</span>
                       </div>
-                      <div style={{ padding:'10px 8px', borderRight:'1px solid #f0f0f0', background:'#fffdf5', display:'flex', flexDirection:'column', gap:'6px', alignItems:'center' }}>
-                        <span style={{ fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>最終調整額</span>
-                        <div style={{ display:'flex', alignItems:'center', gap:'2px', width:'100%', justifyContent:'center' }}>
-                          <span style={{ fontSize:'10px', color:'#9ca3af', flexShrink:0 }}>¥</span>
-                          <input type="number" value={data.finalAmount!==null?data.finalAmount:''} onChange={e=>updateMonth(data.month,'finalAmount',e.target.value===''?null:Number(e.target.value))}
-                            style={{ width:'100%', maxWidth:'72px', padding:'3px 4px', textAlign:'center', border:'1.5px solid #fcd34d', borderRadius:'5px', fontSize:'12px', minWidth:0 }} placeholder="自動" />
-                        </div>
-                        <span style={{ fontSize:'10px', color:'#b45309' }}>¥{fmt(data.partIncome)}</span>
+                      <div style={{padding:'10px 8px',display:'flex',flexDirection:'column',gap:'4px',alignItems:'center',background:'#fff1f2'}}>
+                        <span style={{fontSize:'10px',color:'#9ca3af',fontWeight:'600'}}>休日出勤（日数）</span>
+                        <StepInput value={data.holidayDays||0} onChange={v=>updateMonth(data.month,'holidayDays',v)} borderColor="#fda4af"/>
+                        <span style={{fontSize:'10px',color:'#e11d48',fontWeight:'600'}}>{data.holidayDays||0}日 → ¥{fmt(data.holidayIncome)}</span>
                       </div>
-                      <div style={{ padding:'10px 8px', background:'#f7fef9', display:'flex', flexDirection:'column', gap:'6px', alignItems:'center' }}>
-                        <span style={{ fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>その他収入</span>
-                        <div style={{ display:'flex', alignItems:'center', gap:'2px', width:'100%', justifyContent:'center' }}>
-                          <span style={{ fontSize:'10px', color:'#9ca3af', flexShrink:0 }}>¥</span>
-                          <input type="number" value={data.sideIncome||''} onChange={e=>updateMonth(data.month,'sideIncome',e.target.value===''?0:Number(e.target.value))}
-                            style={{ width:'100%', maxWidth:'72px', padding:'3px 4px', textAlign:'center', border:'1.5px solid #86efac', borderRadius:'5px', fontSize:'12px', minWidth:0 }} placeholder="0" />
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',borderTop:'1px solid #f0f0f0'}}>
+                      <div style={{padding:'10px 8px',borderRight:'1px solid #f0f0f0',background:'#fffdf5',display:'flex',flexDirection:'column',gap:'4px',alignItems:'center'}}>
+                        <span style={{fontSize:'10px',color:'#9ca3af',fontWeight:'600'}}>最終調整額</span>
+                        <div style={{display:'flex',alignItems:'center',gap:'2px',width:'100%',justifyContent:'center'}}>
+                          <span style={{fontSize:'10px',color:'#9ca3af',flexShrink:0}}>¥</span>
+                          <input type="number" value={data.finalAmount!==null?data.finalAmount:''}
+                            onChange={e=>updateMonth(data.month,'finalAmount',e.target.value===''?null:Number(e.target.value))}
+                            style={{width:'100%',maxWidth:'80px',padding:'3px 4px',textAlign:'center',border:'1.5px solid #fcd34d',borderRadius:'5px',fontSize:'12px',minWidth:0}} placeholder="自動"/>
                         </div>
-                        <span style={{ fontSize:'10px', color:'#16a34a' }}>¥{fmt(data.sideIncome||0)}</span>
+                        <span style={{fontSize:'10px',color:'#b45309'}}>¥{fmt(data.partIncome)}</span>
+                      </div>
+                      <div style={{padding:'10px 8px',background:'#f7fef9',display:'flex',flexDirection:'column',gap:'4px',alignItems:'center'}}>
+                        <span style={{fontSize:'10px',color:'#9ca3af',fontWeight:'600'}}>その他収入</span>
+                        <div style={{display:'flex',alignItems:'center',gap:'2px',width:'100%',justifyContent:'center'}}>
+                          <span style={{fontSize:'10px',color:'#9ca3af',flexShrink:0}}>¥</span>
+                          <input type="number" value={data.sideIncome||''}
+                            onChange={e=>updateMonth(data.month,'sideIncome',e.target.value===''?0:Number(e.target.value))}
+                            style={{width:'100%',maxWidth:'80px',padding:'3px 4px',textAlign:'center',border:'1.5px solid #86efac',borderRadius:'5px',fontSize:'12px',minWidth:0}} placeholder="0"/>
+                        </div>
+                        <span style={{fontSize:'10px',color:'#16a34a'}}>¥{fmt(data.sideIncome||0)}</span>
                       </div>
                     </div>
                   </div>
                 ))}
-                <div style={{ border:'2px solid #c7d2fe', borderRadius:'12px', background:'#f0f4ff', padding:'14px 16px' }}>
-                  <span style={{ fontWeight:'800', fontSize:'14px', color:'#1e1b4b', display:'block', marginBottom:'8px' }}>年間合計</span>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px' }}>
-                    {[{label:'パート収入',val:calculateSchedule.yearly.partIncome,color:'#6366f1'},{label:'その他収入',val:calculateSchedule.yearly.sideIncome,color:'#16a34a'},{label:'総収入',val:calculateSchedule.yearly.totalIncome,color:'#7c3aed'}].map(({label,val,color})=>(
-                      <div key={label} style={{ textAlign:'center' }}>
-                        <p style={{ margin:'0 0 3px', fontSize:'10px', color:'#9ca3af', fontWeight:'600' }}>{label}</p>
-                        <p style={{ margin:0, fontWeight:'800', fontSize:'13px', color }}>¥{fmt(val)}</p>
+
+                {/* 年間合計 */}
+                <div style={{border:'2px solid #c7d2fe',borderRadius:'12px',background:'#f0f4ff',padding:'14px 16px'}}>
+                  <span style={{fontWeight:'800',fontSize:'14px',color:'#1e1b4b',display:'block',marginBottom:'8px'}}>年間合計</span>
+                  <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+                    {[
+                      {label:'パート収入',val:calculateSchedule.yearly.partIncome, color:'#6366f1'},
+                      {label:'その他収入',val:calculateSchedule.yearly.sideIncome, color:'#16a34a'},
+                      {label:'総収入',    val:calculateSchedule.yearly.totalIncome,color:'#7c3aed'},
+                    ].map(({label,val,color})=>(
+                      <div key={label} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <p style={{margin:0,fontSize:'11px',color:'#9ca3af',fontWeight:'600'}}>{label}</p>
+                        <p style={{margin:0,fontWeight:'800',fontSize:'14px',color,whiteSpace:'nowrap'}}>¥{fmt(val)}</p>
                       </div>
                     ))}
                   </div>
@@ -424,29 +382,29 @@
             </div>
 
             {/* Future income */}
-            <div style={{ background:'white', borderRadius:'16px', boxShadow:'0 4px 24px rgba(99,102,241,0.10)', padding:'16px' }}>
-              <h2 style={{ fontSize:'16px', fontWeight:'800', color:'#1e1b4b', marginBottom:'2px', display:'flex', alignItems:'center', gap:'8px' }}>
-                <TrendIcon size={20} color="#6366f1" /> 来年以降の予想年収
+            <div style={{background:'white',borderRadius:'16px',boxShadow:'0 4px 24px rgba(99,102,241,0.10)',padding:'16px'}}>
+              <h2 style={{fontSize:'16px',fontWeight:'800',color:'#1e1b4b',marginBottom:'2px',display:'flex',alignItems:'center',gap:'8px'}}>
+                <TrendIcon size={20} color="#6366f1"/> 来年以降の予想年収
               </h2>
-              <p style={{ fontSize:'11px', color:'#9ca3af', marginBottom:'14px' }}>※ 調整・手当なしの基本勤務での予想です</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+              <p style={{fontSize:'11px',color:'#9ca3af',marginBottom:'14px'}}>※ 調整・手当なしの基本勤務での予想です</p>
+              <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
                 {futureYears.map(({y,income},i)=>{
-                  const labels  = ['来年','再来年','3年後','4年後','5年後'];
-                  const accents = ['#6366f1','#7c3aed','#2563eb','#0891b2','#059669'];
-                  const bgs     = ['#f5f3ff','#f0f4ff','#eff6ff','#ecfeff','#f0fdf4'];
-                  const borders = ['#ddd6fe','#c7d2fe','#bfdbfe','#a5f3fc','#bbf7d0'];
+                  const labels =['来年','再来年','3年後','4年後','5年後'];
+                  const accents=['#6366f1','#7c3aed','#2563eb','#0891b2','#059669'];
+                  const bgs    =['#f5f3ff','#f0f4ff','#eff6ff','#ecfeff','#f0fdf4'];
+                  const borders=['#ddd6fe','#c7d2fe','#bfdbfe','#a5f3fc','#bbf7d0'];
                   return (
-                    <div key={y} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:bgs[i], border:`1.5px solid ${borders[i]}`, borderRadius:'10px', padding:'10px 14px' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                        <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:accents[i], flexShrink:0 }} />
+                    <div key={y} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:bgs[i],border:`1.5px solid ${borders[i]}`,borderRadius:'10px',padding:'10px 14px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                        <div style={{width:'8px',height:'8px',borderRadius:'50%',background:accents[i],flexShrink:0}}/>
                         <div>
-                          <span style={{ fontSize:'13px', fontWeight:'800', color:'#1e1b4b' }}>{y}年</span>
-                          <span style={{ marginLeft:'6px', fontSize:'10px', background:'white', color:accents[i], border:`1px solid ${borders[i]}`, borderRadius:'10px', padding:'1px 7px', fontWeight:'700' }}>{labels[i]}</span>
+                          <span style={{fontSize:'13px',fontWeight:'800',color:'#1e1b4b'}}>{y}年</span>
+                          <span style={{marginLeft:'6px',fontSize:'10px',background:'white',color:accents[i],border:`1px solid ${borders[i]}`,borderRadius:'10px',padding:'1px 7px',fontWeight:'700'}}>{labels[i]}</span>
                         </div>
                       </div>
-                      <div style={{ textAlign:'right' }}>
-                        <p style={{ margin:0, fontSize:'15px', fontWeight:'800', color:accents[i] }}>¥{fmt(income)}</p>
-                        <p style={{ margin:0, fontSize:'10px', color:'#9ca3af' }}>月平均 ¥{fmt(Math.round(income/12))}</p>
+                      <div style={{textAlign:'right'}}>
+                        <p style={{margin:0,fontSize:'15px',fontWeight:'800',color:accents[i],whiteSpace:'nowrap'}}>¥{fmt(income)}</p>
+                        <p style={{margin:0,fontSize:'10px',color:'#9ca3af',whiteSpace:'nowrap'}}>月平均 ¥{fmt(Math.round(income/12))}</p>
                       </div>
                     </div>
                   );
@@ -459,17 +417,15 @@
       );
     };
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<WorkScheduleCalculator />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<WorkScheduleCalculator/>);
   </script>
 
-  <!-- Service Worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       const swCode = `
-        const CACHE = 'work-calc-v1';
+        const CACHE = 'work-calc-v2';
         self.addEventListener('install', e => {
-          e.waitUntil(caches.open(CACHE).then(c => c.addAll([
-            './', './index.html',
+          e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html',
             'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
             'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js'
@@ -477,21 +433,19 @@
           self.skipWaiting();
         });
         self.addEventListener('activate', e => {
-          e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+          e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
           self.clients.claim();
         });
         self.addEventListener('fetch', e => {
-          e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(e.request, clone));
-            return res;
+          e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+            const clone=res.clone(); caches.open(CACHE).then(c=>c.put(e.request,clone)); return res;
           })));
         });
       `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      const swUrl = URL.createObjectURL(blob);
-      navigator.serviceWorker.register(swUrl).catch(() => {});
+      const blob = new Blob([swCode], {type:'application/javascript'});
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
     }
   </script>
+
 </body>
 </html>
